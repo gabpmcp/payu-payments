@@ -45,3 +45,4 @@ generated/
 
 # Local environment files
 .env
+.env

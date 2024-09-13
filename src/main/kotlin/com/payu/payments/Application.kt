@@ -9,12 +9,15 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.routing.*
+import io.migrateDatabase
 import io.saveTransaction
 import routes.paymentRoutes
 import service.PaymentService
 
 fun main() {
     embeddedServer(Netty, port = 8080) {
+                migrateDatabase()
+
                 // Ejecutar la función de conexión a la base de datos
                 connectToDatabase()
 

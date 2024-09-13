@@ -5,7 +5,9 @@ import com.zaxxer.hikari.HikariDataSource
 import domain.PayerInfo
 import domain.Transaction
 import domain.TransactionStatus
+import io.github.cdimascio.dotenv.dotenv
 import java.time.LocalDateTime
+import org.flywaydb.core.Flyway
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.Table
@@ -13,13 +15,25 @@ import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 
+val dotenv by lazy { dotenv() } // Carga el archivo .env
+
+fun migrateDatabase() {
+    val url = dotenv["URL"]
+    val user = dotenv["USER"]
+    val password = dotenv["PASSWORD"]
+
+    val flyway = Flyway.configure().dataSource(url, user, password).load()
+
+    flyway.migrate()
+}
+
 fun connectToDatabase() {
     val hikariConfig =
             HikariConfig().apply {
-                jdbcUrl = "jdbc:postgresql://localhost:5432/mydb"
-                driverClassName = "org.postgresql.Driver"
-                username = "user"
-                password = "password"
+                jdbcUrl = dotenv["URL"]
+                driverClassName = dotenv["DRIVER"]
+                username = dotenv["USER"]
+                password = dotenv["PASSWORD"]
                 maximumPoolSize = 10
             }
     val dataSource = HikariDataSource(hikariConfig)
