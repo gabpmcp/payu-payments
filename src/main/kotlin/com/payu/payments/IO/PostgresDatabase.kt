@@ -15,7 +15,7 @@ import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 
-val dotenv by lazy { dotenv() } // Carga el archivo .env
+val dotenv by lazy { dotenv() }
 
 fun migrateDatabase() {
     val url = dotenv["URL"]

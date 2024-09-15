@@ -1,8 +1,8 @@
 # payu-payments
 
 1. Install `gradle` and `kotlin` commands: `brew install kotlin && brew install gradle`.
-2. Compile the project: `gradle build`.
-3. Build and compose the images using `docker-compose up --build`.
+2. Compile the project: `./gradlew clean build jibDockerBuild`.
+3. Build and compose the images using `docker-compose --env-file src/main/resources/.env up`.
 4. Use the folllowing cURLs to access to services:
 5. Run using `gradle run` command, and enjoy it!
 
