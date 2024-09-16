@@ -6,6 +6,7 @@ import domain.PayerInfo
 import domain.Transaction
 import domain.TransactionStatus
 import io.github.cdimascio.dotenv.dotenv
+import java.sql.DriverManager
 import java.time.LocalDateTime
 import org.flywaydb.core.Flyway
 import org.jetbrains.exposed.sql.*
@@ -17,12 +18,34 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 val dotenv by lazy { dotenv() }
 
+fun testDatabaseConnection() {
+    val url = dotenv["URL"]
+    val user = dotenv["DB_USER"]
+    val password = dotenv["DB_PASSWORD"]
+
+    try {
+        Class.forName("org.postgresql.Driver")
+        val connection = DriverManager.getConnection(url, user, password)
+        println("Connection successful!")
+        connection.close()
+    } catch (e: Exception) {
+        println("Connection failed!")
+        e.printStackTrace()
+    }
+}
+
 fun migrateDatabase() {
     val url = dotenv["URL"]
-    val user = dotenv["USER"]
-    val password = dotenv["PASSWORD"]
+    val user = dotenv["DB_USER"]
+    val password = dotenv["DB_PASSWORD"]
 
-    val flyway = Flyway.configure().dataSource(url, user, password).load()
+    val flyway =
+            Flyway.configure()
+                    .dataSource(url, user, password)
+                    .driver(dotenv["DRIVER"])
+                    .locations("classpath:migration")
+                    .loggers("slf4j")
+                    .load()
 
     flyway.migrate()
 }
@@ -32,8 +55,8 @@ fun connectToDatabase() {
             HikariConfig().apply {
                 jdbcUrl = dotenv["URL"]
                 driverClassName = dotenv["DRIVER"]
-                username = dotenv["USER"]
-                password = dotenv["PASSWORD"]
+                username = dotenv["DB_USER"]
+                password = dotenv["DB_PASSWORD"]
                 maximumPoolSize = 10
             }
     val dataSource = HikariDataSource(hikariConfig)
@@ -52,6 +75,7 @@ object TransactionsTable : Table("transactions") {
 }
 
 fun saveTransaction(transaction: Transaction) {
+    println("Enter to Transaction with ID ${transaction.id} saving...")
     transaction {
         TransactionsTable.insert {
             it[id] = transaction.id
@@ -64,6 +88,7 @@ fun saveTransaction(transaction: Transaction) {
             it[createdAt] = LocalDateTime.now().toString()
         }
     }
+    println("Transaction with ID ${transaction.id} saved successfully.")
 }
 
 fun findTransactionById(id: String): Transaction? {

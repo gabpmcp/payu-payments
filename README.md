@@ -2,9 +2,8 @@
 
 1. Install `gradle` and `kotlin` commands: `brew install kotlin && brew install gradle`.
 2. Compile the project: `./gradlew clean build jibDockerBuild`.
-3. Build and compose the images using `docker-compose --env-file src/main/resources/.env up`.
+3. Build and compose the images using `docker-compose --env-file src/main/resources/.env up --force-recreate --remove-orphans`.
 4. Use the folllowing cURLs to access to services:
-5. Run using `gradle run` command, and enjoy it!
 
 ```cURL
 curl -X POST http://localhost:8080/payments/purchase \
@@ -22,3 +21,5 @@ curl -X POST http://localhost:8080/payments/purchase \
 curl -X POST http://localhost:8080/payments/refund/{id} \
   -H "Content-Type: application/json"
 ```
+
+5. By accessing to DB, use: `docker-compose exec database psql -U postgres -d mydb`

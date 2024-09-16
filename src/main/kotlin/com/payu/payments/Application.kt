@@ -11,46 +11,61 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.routing.*
 import io.migrateDatabase
 import io.saveTransaction
+import kotlin.io.println
 import routes.paymentRoutes
 import service.PaymentService
 
 fun main() {
-    embeddedServer(Netty, port = 8080) {
-                migrateDatabase()
+    println("Starting application...")
 
-                // Ejecutar la función de conexión a la base de datos
-                connectToDatabase()
+    embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
+                try {
+                    // Migración de la base de datos
+                    migrateDatabase()
 
-                // Configuración de Ktor
-                install(ContentNegotiation) {
-                    json() // Configura el soporte para JSON
-                }
+                    // Ejecutar la función de conexión a la base de datos
+                    connectToDatabase()
 
-                // Funciones productivas que inyectaremos en PaymentService
-                val verifyAntiFraud: (PayerInfo) -> Boolean = { payerInfo ->
-                    payerInfo.amount < 5000 // Implementación real del servicio antifraude
-                }
+                    println("Inside embeddedServer")
 
-                val processBankPayment: (CreditCard) -> Boolean = { card ->
-                    card.cvv == "123" // Implementación real del servicio bancario
-                }
+                    // Configuración de Ktor
+                    install(ContentNegotiation) {
+                        json() // Configura el soporte para JSON
+                    }
 
-                val saveTransaction: (Transaction) -> Unit = ::saveTransaction
+                    // Funciones productivas que inyectaremos en PaymentService
+                    val verifyAntiFraud: (PayerInfo) -> Boolean = { payerInfo ->
+                        payerInfo.amount < 5000 // Implementación real del servicio antifraude
+                    }
 
-                val findTransactionById: (String) -> Transaction? = ::findTransactionById
+                    val processBankPayment: (CreditCard) -> Boolean = { card ->
+                        card.cvv == "123" // Implementación real del servicio bancario
+                    }
 
-                // Inyectar las funciones productivas en PaymentService
-                val paymentService =
-                        PaymentService(
-                                verifyAntiFraud = verifyAntiFraud,
-                                processBankPayment = processBankPayment,
-                                saveTransaction = saveTransaction,
-                                findTransactionById = findTransactionById
-                        )
+                    val saveTransaction: (Transaction) -> Unit = ::saveTransaction
 
-                routing {
-                    paymentRoutes(paymentService) // Inyectamos el PaymentService en las rutas
+                    val findTransactionById: (String) -> Transaction? = ::findTransactionById
+
+                    // Inyectar las funciones productivas en PaymentService
+                    val paymentService =
+                            PaymentService(
+                                    verifyAntiFraud = verifyAntiFraud,
+                                    processBankPayment = processBankPayment,
+                                    saveTransaction = saveTransaction,
+                                    findTransactionById = findTransactionById
+                            )
+
+                    routing {
+                        paymentRoutes(paymentService) // Inyectamos el PaymentService en las rutas
+                        println("Rutas configuradas correctamente")
+                    }
+                    println("Server started")
+                } catch (e: Exception) {
+                    println("Error during database migration: ${e.message}")
+                    e.printStackTrace()
                 }
             }
             .start(wait = true)
+
+    println("Server started")
 }
